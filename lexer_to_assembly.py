@@ -26,11 +26,22 @@ def parseExpressao(linha:str) -> list[str]:
     tokens = []
     index = 0
     while index < len(linha):
+        # print(f"Analisando caractere: '{linha[index]}' no índice {index}")
+        # index+= 1
         index = dfa.estado_inicial(linha,index, tokens) 
+    
     return tokens
 
-filename = recieve_file_name()
-lines = process_file(filename)
-for line in lines:
-    tokens = parseExpressao(line)
-    print(tokens)
+def main():
+    filename = recieve_file_name()
+    lines = process_file(filename)
+    
+    for numero_linha, linha in enumerate(lines, start=1):
+        try:
+            tokens = parseExpressao(linha)
+            print(f"Tokens na linha {numero_linha}: {tokens}")
+        except dfa.LexicalError as e:
+            print(f"Erro léxico na linha {numero_linha}: {e}")
+            
+if __name__ == "__main__":
+    main()
