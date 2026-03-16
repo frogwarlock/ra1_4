@@ -1,5 +1,6 @@
 #maquina de estados finitos 
 # Implementação do Analisador léxico usando Autômatos Finitos Determinísticos (AFDs), com cada estado como uma função.
+#TODO provavelmente fazer ajuste para tirar validação de parenteses do dfa
 
 class LexicalError(Exception):
     pass
