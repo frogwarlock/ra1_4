@@ -5,7 +5,7 @@ class LexicalError(Exception):
     pass
 
 ESPACOS = {" ", "\t"}
-OPERADORES_SIMPLES = {"+", "*", "%", "ˆ"}
+OPERADORES_SIMPLES = {"+", "*", "%", "^"}
 PARENTESES = {"(", ")"}
 
 def is_number(caractere: str) -> bool:
