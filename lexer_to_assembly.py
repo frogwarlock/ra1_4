@@ -25,14 +25,10 @@ def process_file(filename):
 def parseExpressao(linha:str) -> list[str]:
     tokens = []
     index = 0
-    saldo_parenteses = 0
     while index < len(linha):
         # print(f"Analisando caractere: '{linha[index]}' no índice {index}")
         # index+= 1
-        index, saldo_parenteses = dfa.estado_inicial(linha,index, tokens, saldo_parenteses) 
-        
-    if saldo_parenteses != 0:
-        raise dfa.LexicalError("Erro: Parênteses não balanceados.")
+        index = dfa.estado_inicial(linha,index, tokens) 
     
     return tokens
 

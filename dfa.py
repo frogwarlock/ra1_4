@@ -1,6 +1,5 @@
 #maquina de estados finitos 
 # Implementação do Analisador léxico usando Autômatos Finitos Determinísticos (AFDs), com cada estado como uma função.
-#TODO provavelmente fazer ajuste para tirar validação de parenteses do dfa
 
 class LexicalError(Exception):
     pass
@@ -41,79 +40,71 @@ def is_DVT_eO(linha: str, index: int) -> bool:
     return caractere in ESPACOS or caractere in PARENTESES
 
 
-def estado_inicial(linha, index, tokens, saldo_parenteses):
+def estado_inicial(linha, index, tokens):
     """
     Estado inicial é responsável analisar o caractere atual e decidir qual estado seguir com base no tipo do caractere (número, letra, operador, etc.).
     Args:
         linha (list): A linha de código a ser analisada
         index (int): O índice atual na linha
         tokens (list): A lista de tokens encontrados até o momento
-        saldo_parenteses (int): O saldo de parênteses abertos
     """
     caractere = linha[index]
     
     if caractere in ESPACOS:
-        return index + 1, saldo_parenteses  #ignora espaço em branco e vai para o próximo
+        return index + 1  #ignora espaço em branco e vai para o próximo
     
     if is_number(caractere):
-        return estado_numero(linha, index, tokens, saldo_parenteses)
+        return estado_numero(linha, index, tokens)
     
     if caractere == "-":
-        return estado_intermediario(linha, index, tokens, saldo_parenteses)
+        return estado_intermediario(linha, index, tokens)
     
     if caractere in OPERADORES_SIMPLES or caractere == "/":
-        return estado_operador(linha, index, tokens, saldo_parenteses)
+        return estado_operador(linha, index, tokens)
     
     if is_uppercase_letter(caractere):
-        return estado_palavra(linha, index, tokens, saldo_parenteses)
+        return estado_palavra(linha, index, tokens)
     
     if caractere in PARENTESES:
-        return estado_parenteses(linha, index, tokens, saldo_parenteses)
+        return estado_parenteses(linha, index, tokens)
     
-    return estado_falha(linha, index, tokens, saldo_parenteses, f"Caractere inválido: '{caractere}' no índice {index}")
+    return estado_falha(linha, index, tokens, f"Caractere inválido: '{caractere}' no índice {index}")
 
-def estado_intermediario(linha, index, tokens, saldo_parenteses):
+def estado_intermediario(linha, index, tokens):
     """
     Estado intermediário para lidar com o operador de subtração '-' que pode ser um operador ou parte de um número negativo.
     """
     proximo = index + 1
     
     if proximo < len(linha) and is_number(linha[proximo]):
-        return estado_numero(linha, index, tokens, saldo_parenteses)  # Trata como número negativo
+        return estado_numero(linha, index, tokens)  # Trata como número negativo
     
-    return estado_operador(linha, index, tokens, saldo_parenteses)  # Trata como operador de subtração
+    return estado_operador(linha, index, tokens)  # Trata como operador de subtração
       
-def estado_parenteses(linha, index, tokens, saldo_parenteses):
+def estado_parenteses(linha, index, tokens):
     """
-    Estado responsável por reconhecer parênteses e manter o saldo de parênteses abertos para garantir que estejam balanceados.
+    Estado responsável por reconhecer parênteses sem validar o balance.
     """
     
     caractere = linha[index]
     
-    if caractere == "(":
+    if caractere == "(" or caractere == ")":
         retorna_token(tokens, caractere)
-        return index + 1, saldo_parenteses + 1  # Incrementa saldo de parênteses abertos
+        return index + 1
     
-    if caractere == ")":
-        novo_saldo = saldo_parenteses - 1
-        if novo_saldo < 0:
-            return estado_falha(linha, index, tokens, saldo_parenteses, "Erro: Parênteses fechando sem correspondente aberto.")
-        retorna_token(tokens, caractere)
-        return index + 1, novo_saldo  # Decrementa saldo de parênteses abertos
+    return estado_falha(linha, index, tokens, f"Caractere inválido: '{caractere}' no índice {index}")
     
-    return estado_falha(linha, index, tokens, saldo_parenteses, f"Caractere inválido: '{caractere}' no índice {index}")
-    
-def estado_operador(linha, index, tokens, saldo_parenteses):
+def estado_operador(linha, index, tokens):
     caractere = linha[index]
     #operadores de um caractere
     if caractere in OPERADORES_SIMPLES or caractere == "-":
         proximo_index = index + 1
         
         if not is_DVT_eO(linha, proximo_index):
-            return estado_falha(linha, index, tokens, saldo_parenteses, f"Operador '{caractere}' deve ser seguido por um delimitador válido.")
+            return estado_falha(linha, index, tokens, f"Operador '{caractere}' deve ser seguido por um delimitador válido.")
         
         retorna_token(tokens, caractere)
-        return proximo_index, saldo_parenteses
+        return proximo_index
     
     #caso / ou //
     if caractere == "/":
@@ -123,37 +114,37 @@ def estado_operador(linha, index, tokens, saldo_parenteses):
             fim = proximo_index + 1
             
             if not is_DVT_eO(linha, fim):
-                return estado_falha(linha, index, tokens, saldo_parenteses, "Operador '//' deve ser seguido por um delimitador válido.")
+                return estado_falha(linha, index, tokens, "Operador '//' deve ser seguido por um delimitador válido.")
             retorna_token(tokens, "//")
-            return fim, saldo_parenteses
+            return fim
         
         if not is_DVT_eO(linha, proximo_index):
-            return estado_falha(linha, index, tokens, saldo_parenteses, "Operador '/' deve ser seguido por um delimitador válido.")
+            return estado_falha(linha, index, tokens, "Operador '/' deve ser seguido por um delimitador válido.")
         retorna_token(tokens, "/")
-        return proximo_index, saldo_parenteses
+        return proximo_index
     
-    return estado_falha(linha, index, tokens, saldo_parenteses, f"Caractere '{caractere}' não é um operador válido.")
+    return estado_falha(linha, index, tokens, f"Caractere '{caractere}' não é um operador válido.")
 
-def estado_palavra(linha, index, tokens, saldo_parenteses):
+def estado_palavra(linha, index, tokens):
     inicio = index
     
     while index < len(linha) and is_uppercase_letter(linha[index]):
         index += 1
         
     if not is_DVT_eD_eP(linha, index):
-        return estado_falha(linha, index, tokens, saldo_parenteses, f"Palavra malformada: caractere inválido após '{linha[inicio:index]}'.")
+        return estado_falha(linha, index, tokens, f"Palavra malformada: caractere inválido após '{linha[inicio:index]}'.")
     
     lexema = linha[inicio:index]
     retorna_token(tokens, lexema)
-    return index, saldo_parenteses
+    return index
 
-def estado_numero(linha, index, tokens, saldo_parenteses):
+def estado_numero(linha, index, tokens):
     inicio = index
     
     if linha[index] == "-":  # Lida com número negativo
         index += 1
         if index >= len(linha) or not is_number(linha[index]):
-            return estado_falha(linha, index, tokens, saldo_parenteses, "Número negativo malformado: '-' deve ser seguido por um dígito.")
+            return estado_falha(linha, index, tokens, "Número negativo malformado: '-' deve ser seguido por um dígito.")
         
         #parte inteira
     while index < len(linha) and is_number(linha[index]):
@@ -163,19 +154,19 @@ def estado_numero(linha, index, tokens, saldo_parenteses):
     if index < len(linha) and linha[index] == ".":
         index += 1
         if index >= len(linha) or not is_number(linha[index]):
-            return estado_falha(linha, index, tokens, saldo_parenteses, "Número decimal malformado: '.' deve ser seguido por pelo menos um dígito.")
+            return estado_falha(linha, index, tokens, "Número decimal malformado: '.' deve ser seguido por pelo menos um dígito.")
         
         while index < len(linha) and is_number(linha[index]):
             index += 1
             
     if not is_DVT_eD_eP(linha, index):
-        return estado_falha(linha, index, tokens, saldo_parenteses, f"Número malformado: caractere inválido após '{linha[inicio:index]}'.")
+        return estado_falha(linha, index, tokens, f"Número malformado: caractere inválido após '{linha[inicio:index]}'.")
     
     lexema = linha[inicio:index]
     retorna_token(tokens, lexema)
-    return index, saldo_parenteses
+    return index
 
-def estado_falha(linha, index, tokens, saldo_parenteses, mensagem = "Erro léxico: caractere ou sequência de caracteres inválidos."):
+def estado_falha(linha, index, tokens, mensagem = "Erro léxico: caractere ou sequência de caracteres inválidos."):
     raise LexicalError(mensagem)
 
 
