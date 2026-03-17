@@ -1,5 +1,11 @@
 #maquina de estados finitos 
 # Implementação do Analisador léxico usando Autômatos Finitos Determinísticos (AFDs), com cada estado como uma função.
+from dataclasses import dataclass
+
+@dataclass
+class Token: 
+    tipo: str
+    valor: str
 
 class LexicalError(Exception):
     pass
@@ -14,9 +20,9 @@ def is_number(caractere: str) -> bool:
 def is_uppercase_letter(caractere: str) -> bool:
     return "A" <= caractere <= "Z"
 
-def retorna_token(tokens: list[str], lexema: str):
-    tokens.append(lexema)
-    
+def retorna_token(tokens: list[Token], lexema: str, tipo: str):
+    tokens.append(Token(tipo=tipo, valor=lexema))
+
 def is_DVT_eD_eP(linha: str, index: int) -> bool:
     """
     Delimitador Valido de Token para encerrar o estado Digito e estadp Palavra
@@ -89,7 +95,7 @@ def estado_parenteses(linha, index, tokens):
     caractere = linha[index]
     
     if caractere == "(" or caractere == ")":
-        retorna_token(tokens, caractere)
+        retorna_token(tokens, caractere, "PARENTHESIS")
         return index + 1
     
     return estado_falha(linha, index, tokens, f"Caractere inválido: '{caractere}' no índice {index}")
@@ -103,7 +109,7 @@ def estado_operador(linha, index, tokens):
         if not is_DVT_eO(linha, proximo_index):
             return estado_falha(linha, index, tokens, f"Operador '{caractere}' deve ser seguido por um delimitador válido.")
         
-        retorna_token(tokens, caractere)
+        retorna_token(tokens, caractere, "OPERATOR")
         return proximo_index
     
     #caso / ou //
@@ -115,12 +121,12 @@ def estado_operador(linha, index, tokens):
             
             if not is_DVT_eO(linha, fim):
                 return estado_falha(linha, index, tokens, "Operador '//' deve ser seguido por um delimitador válido.")
-            retorna_token(tokens, "//")
+            retorna_token(tokens, "//", "OPERATOR")
             return fim
         
         if not is_DVT_eO(linha, proximo_index):
             return estado_falha(linha, index, tokens, "Operador '/' deve ser seguido por um delimitador válido.")
-        retorna_token(tokens, "/")
+        retorna_token(tokens, "/", "OPERATOR")
         return proximo_index
     
     return estado_falha(linha, index, tokens, f"Caractere '{caractere}' não é um operador válido.")
@@ -135,7 +141,7 @@ def estado_palavra(linha, index, tokens):
         return estado_falha(linha, index, tokens, f"Palavra malformada: caractere inválido após '{linha[inicio:index]}'.")
     
     lexema = linha[inicio:index]
-    retorna_token(tokens, lexema)
+    retorna_token(tokens, lexema, "WORD")
     return index
 
 def estado_numero(linha, index, tokens):
@@ -163,7 +169,7 @@ def estado_numero(linha, index, tokens):
         return estado_falha(linha, index, tokens, f"Número malformado: caractere inválido após '{linha[inicio:index]}'.")
     
     lexema = linha[inicio:index]
-    retorna_token(tokens, lexema)
+    retorna_token(tokens, lexema, "NUMBER")
     return index
 
 def estado_falha(linha, index, tokens, mensagem = "Erro léxico: caractere ou sequência de caracteres inválidos."):
