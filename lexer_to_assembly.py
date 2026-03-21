@@ -2,7 +2,7 @@
 #ra1_4
 from fileinput import filename
 import sys
-import dfa
+import dfa, executor
 
 #TODO O vetor de tokens gerado pelo Analisador Léxico deve ser salvo em um arquivo .txt para uso nas próximas fases do projeto.
 
@@ -19,9 +19,11 @@ def process_file(filename):
         lines = file.readlines()
     return [line.strip() for line in lines]
 
+def results_file(filename, tokens):
+    #processa o nome do arquivo para criar um novo nome para o arquivo de resultados
+    pass
+
 #responsável por reconhecer pedaços VÁLIDOS do código não fazer verificação da operação de expressão
-# se recebe (1.0 2.0 +) deve reconhecer os tokens [( , 1.0, 2.0, +, )]
-#aqui passa o ADF para reconhecer os tokens válidos e formar a expressão a ser passada para o parser que será [( , 1.0, 2.0, +, )]
 def parseExpressao(linha:str) -> list[str]:
     tokens = []
     index = 0
@@ -31,6 +33,7 @@ def parseExpressao(linha:str) -> list[str]:
         index = dfa.estado_inicial(linha,index, tokens) 
     
     return tokens
+
 
 def main():
     filename = recieve_file_name()
