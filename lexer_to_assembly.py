@@ -42,8 +42,9 @@ def main():
     for numero_linha, linha in enumerate(lines, start=1):
         try:
             tokens = parseExpressao(linha)
-            token_values = [token.valor for token in tokens]
-            print(f"Tokens na linha {numero_linha}: {token_values}")
+            resultado = executor.executarExpressao(tokens, memoria={}, historico=[])
+            # token_values = [token.valor for token in tokens]
+            # print(f"Tokens na linha {numero_linha}: {token_values}")
         except dfa.LexicalError as e:
             print(f"Erro léxico na linha {numero_linha}: {e}")
             

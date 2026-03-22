@@ -115,13 +115,117 @@ def avalia_bloco(tokens_bloco: list, memoria: dict, historico: list): #sem type 
     # aritmético
     return avalia_bloco_aritmetico(tokens_bloco, memoria, historico)
 
-def avalia_bloco_aritmetico(tokens_bloco: list, memoria: dict, historico: list):
-    pass
-
 def substituir_bloco_por_resultado(tokens: list, inicio: int, fim: int, resultado: float) -> list:
     """
         Substitui o bloco entre os índices inicio e fim por um token do resultado.
     """
     token_resultado = criar_token_numero(resultado)
     return tokens[:inicio] + [token_resultado] + tokens[fim + 1 :]
+
+def avalia_leitura_memoria(tokens_bloco: list, memoria:dict) -> float:
+    """
+        Avalia um bloco de leitura de memória (MEM). Exemplo: (MEM)
+        Retorna o valor armazenado na memória para o nome especificado.
+    """
+    nome_memoria = tokens_bloco[0].valor
+    return float(memoria.get(nome_memoria, 0.0))
+
+def avalia_escrita_memoria(tokens_bloco: list, memoria: dict) -> float:
+    """
+        Avalia um bloco de escrita de memória (V MEM). Exemplo: (5 MEM)
+        Escreve o valor especificado na memória para o nome dado e retorna o valor escrito
+    """
+    valor = float(tokens_bloco[0].valor)
+    nome_memoria = tokens_bloco[1].valor
+    
+    memoria[nome_memoria] = valor
+    return valor
+
+def avalia_historico_res(tokens_bloco: list, historico: list) -> float:
+    """
+        Avalia um bloco de histórico (N RES). Exemplo: (0 RES)
+        Retorna o valor armazenado no histórico para o índice especificado.
+    """
+
+    index_historico = float(tokens_bloco[0].valor)
+    
+    if not index_historico.is_integer() or index_historico < 0:
+        raise ValueError(f"Índice de histórico inválido: {index_historico}. Deve ser um número inteiro não negativo.")
+    
+    index_historico = int(index_historico)
+    
+    if index_historico >= len(historico):
+        raise ValueError(f"Índice de histórico fora do alcance: {index_historico}. Histórico atual tem {len(historico)} entradas.")
+    
+    return float(historico[-index_historico + 1])
+
+def avalia_bloco_aritmetico(tokens_bloco: list, memoria: dict, historico: list):
+    pilha = []
+    
+    for token in tokens_bloco:
+        if token.tipo == "NUMBER":
+            pilha.append(float(token.valor))
+            
+        elif token.tipo == "IDENTIFIER_MEM":
+            nome_memoria = token.valor
+            pilha.append(float(memoria.get(nome_memoria, 0.0)))
+            continue
+        
+        if token.tipo in {
+            "ADITION_OPERATOR",
+            "SUBTRACTION_OPERATOR",
+            "MULTIPLICATION_OPERATOR",
+            "DIVISION_OPERATOR",
+            "INTEGER_DIVISION_OPERATOR",
+            "MODULO_OPERATOR",
+            "EXPONENTIATION_OPERATOR"
+        }:
+            if len(pilha) < 2:
+                raise ValueError(
+                    f"Pilha insuficiente para operação '{token.valor}'. Pilha atual: {pilha}"
+                )
+                
+            b = pilha.pop()
+            a = pilha.pop()
+            resultado = aplica_operador(a, b, token.tipo)
+            pilha.append(resultado)
+            continue
+        
+        raise ValueError(f"Token inesperado em bloco aritmético: {token}")
+    
+    if len(pilha) != 1:
+        raise ValueError(f"Bloco aritmético não foi reduzido a um único resultado. Pilha final: {pilha}")
+    
+    return pilha[0]
+
+def aplica_operador(a:float, b:float, tipo_operador:str) -> float:
+    if tipo_operador == "ADDITION_OPERATOR":
+        return a + b
+    
+    if tipo_operador == "SUBTRACTION_OPERATOR":
+        return a - b
+    
+    if tipo_operador == "MULTIPLICATION_OPERATOR":
+        return a * b
+    
+    if tipo_operador == "DIVISION_OPERATOR":
+        if b == 0:
+            raise ValueError("Divisão por zero.")
+        return a / b
+    
+    if tipo_operador == "INTEGER_DIVISION_OPERATOR":
+        if b == 0:
+            raise ValueError("Divisão inteira por zero.")
+        return a // b
+    
+    if tipo_operador == "MODULO_OPERATOR":
+        if b == 0:
+            raise ValueError("Módulo por zero.")
+        return a % b
+    
+    if tipo_operador == "EXPONENTIATION_OPERATOR":
+        return a ** b
+    
+    raise ValueError(f"Tipo de operador desconhecido: {tipo_operador}")
+                
 
