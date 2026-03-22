@@ -54,7 +54,7 @@ def verifica_balanceamento_parenteses(tokens: list) -> bool:
             if not pilha_parenteses_abertos:
                 return False  # Encontrou um parêntese fechado sem um correspondente aberto
             
-            ultimo_parentese_aberto = pilha_parenteses_abertos.pop()
+            pilha_parenteses_abertos.pop()
             
     return len(pilha_parenteses_abertos) == 0  # Verifica se todos os parênteses abertos foram fechados
 
@@ -157,7 +157,7 @@ def avalia_historico_res(tokens_bloco: list, historico: list) -> float:
     if index_historico >= len(historico):
         raise ValueError(f"Índice de histórico fora do alcance: {index_historico}. Histórico atual tem {len(historico)} entradas.")
     
-    return float(historico[-index_historico + 1])
+    return float(historico[-(index_historico + 1)])
 
 def avalia_bloco_aritmetico(tokens_bloco: list, memoria: dict, historico: list):
     pilha = []
@@ -165,6 +165,7 @@ def avalia_bloco_aritmetico(tokens_bloco: list, memoria: dict, historico: list):
     for token in tokens_bloco:
         if token.tipo == "NUMBER":
             pilha.append(float(token.valor))
+            continue
             
         elif token.tipo == "IDENTIFIER_MEM":
             nome_memoria = token.valor
@@ -172,7 +173,7 @@ def avalia_bloco_aritmetico(tokens_bloco: list, memoria: dict, historico: list):
             continue
         
         if token.tipo in {
-            "ADITION_OPERATOR",
+            "ADDITION_OPERATOR",
             "SUBTRACTION_OPERATOR",
             "MULTIPLICATION_OPERATOR",
             "DIVISION_OPERATOR",
