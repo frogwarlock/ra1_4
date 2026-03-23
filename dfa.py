@@ -13,6 +13,7 @@ class LexicalError(Exception):
 
 ESPACOS = {" ", "\t"}
 OPERADORES_SIMPLES = {"+", "*", "%", "^"}
+SUBTRACTION_OPERATOR = {"-"}
 PARENTESES = {"(", ")"}
 NUMEROS = set("0123456789")
 LETRAS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -31,8 +32,7 @@ def is_espaco(caractere: str) -> bool:
 
 def pode_iniciar_lexema(caractere: str) -> bool:
     return (
-        caractere in ESPACOS
-        or caractere in PARENTESES
+        caractere in PARENTESES
         or caractere in OPERADORES_SIMPLES
         or caractere == "-"
         or caractere == "/"
@@ -132,6 +132,7 @@ def estado_operador(linha, index, tokens) -> int:
     
     mapa_operadores = {
         "+": "ADDITION_OPERATOR",
+        "-": "SUBTRACTION_OPERATOR",
         "*": "MULTIPLICATION_OPERATOR",
         "%": "MODULO_OPERATOR",
         "^": "EXPONENTIATION_OPERATOR"
