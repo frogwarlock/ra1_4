@@ -1,5 +1,5 @@
 import unittest
-from lexer_to_assembly import parseExpressao
+from main import parseExpressao
 from dfa import LexicalError
 
 
