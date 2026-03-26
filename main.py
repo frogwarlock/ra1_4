@@ -3,6 +3,7 @@
 import sys
 import dfa
 import executor
+import assembly_generator
 
 #TODO O vetor de tokens gerado pelo Analisador Léxico deve ser salvo em um arquivo .txt para uso nas próximas fases do projeto.
 
@@ -10,14 +11,9 @@ def lerArquivo(nomeArquivo: str, linhas: list[str]) -> None:
     """
         Lê arquivo de entrada e preenche a lista de linhas.
     """
-    try:
-        with open(nomeArquivo, 'r', encoding='utf-8') as arquivo:
-            for linha in arquivo:
-                linhas.append(linha.strip('\n'))
-    except FileNotFoundError:
-        print(f"Erro: Arquivo '{nomeArquivo}' não encontrado.")
-    except OSError as error:
-        print(f"Erro ao ler o arquivo: {error}")
+    with open(nomeArquivo, 'r', encoding='utf-8') as arquivo:
+        for linha in arquivo:
+            linhas.append(linha.rstrip('\n'))
 
 def results_file(filename, tokens):
     #processa o nome do arquivo para criar um novo nome para o arquivo de resultados
@@ -37,7 +33,7 @@ def parseExpressao(linha:str) -> list[dfa.Token]:
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python lexer.py <filename>.txt")
+        print("Usage: python main.py <filename>.txt")
         raise SystemExit(1)
     
     nomeArquivo = sys.argv[1]
@@ -56,12 +52,16 @@ def main():
         try:
             tokens = parseExpressao(linha)
             resultado = executor.executarExpressao(tokens, memoria, historico)
+            gerar_codigo_assembly = assembly_generator.gerarAssembly(tokens)
             
-            token_values = [token.valor for token in tokens]
-            print(f"Tokens na linha {numero_linha}: {token_values}")
-            print(f"Resultado da linha {numero_linha}: {resultado}")
-            print(f"Memória após linha {numero_linha}: {memoria}")
-            print(f"Histórico após linha {numero_linha}: {historico}")
+            print(f"Tokens na linha {numero_linha}: {[token.valor for token in tokens]}")
+            print(f"gerar código assembly da linha {numero_linha}: {gerar_codigo_assembly}")
+            
+            # token_values = [token.valor for token in tokens]
+            # print(f"Tokens na linha {numero_linha}: {token_values}")
+            # print(f"Resultado da linha {numero_linha}: {resultado}")
+            # print(f"Memória após linha {numero_linha}: {memoria}")
+            # print(f"Histórico após linha {numero_linha}: {historico}")
             
         except dfa.LexicalError as error:
             print(f"Erro léxico na linha {numero_linha}: {error}")

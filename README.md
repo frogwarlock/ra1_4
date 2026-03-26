@@ -5,12 +5,12 @@
 ## Executar o Analisador Léxico
 
 ```bash
-python3 lexer_to_assembly.py <arquivo>.txt
+python3 main.py <arquivo>.txt
 ```
 
 Exemplo:
 ```bash
-python3 lexer_to_assembly.py teste.txt
+python3 main.py teste.txt
 ```
 
 Saída esperada:

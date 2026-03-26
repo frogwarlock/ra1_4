@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class Token: 
     tipo: str
     valor: str
-    memoria: int = 0
+    # memoria: int = 0
 
 class LexicalError(Exception):
     pass

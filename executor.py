@@ -1,8 +1,17 @@
 # funções referentes ao aluno 2
+import struct
 from dfa import Token
 
+def float64(valor) -> float:
+    """
+        Converte um valor para o formato de ponto flutuante de 64 bits (float64).
+        Isso é necessário para garantir que os cálculos sejam realizados com precisão de 64 bits, mesmo que o Python use internamente uma representação diferente. Questão do arredondamento.
+    """
+    return struct.unpack('>d', struct.pack('>d', float(valor)))[0]
+
 def criar_token_numero(valor:float) -> Token:
-    return Token(tipo="NUMBER", valor=str(valor), memoria=8)
+    valor_64 = float64(valor)
+    return Token(tipo="NUMBER", valor=repr(valor_64))
 
 def executarExpressao(tokens: list, memoria: dict, historico: list) -> float:
     """
@@ -35,7 +44,7 @@ def executarExpressao(tokens: list, memoria: dict, historico: list) -> float:
     if tokens_linha[0].tipo != "NUMBER":
         raise ValueError(f"O resultado final não é um número. Token final: {tokens_linha[0]}")
     
-    resultado_final = float(tokens_linha[0].valor)
+    resultado_final = float64(tokens_linha[0].valor)
     historico.append(resultado_final)
     return resultado_final
 
@@ -119,7 +128,8 @@ def substituir_bloco_por_resultado(tokens: list, inicio: int, fim: int, resultad
     """
         Substitui o bloco entre os índices inicio e fim por um token do resultado.
     """
-    token_resultado = criar_token_numero(resultado)
+    token_resultado = criar_token_numero(resultado)  
+    
     return tokens[:inicio] + [token_resultado] + tokens[fim + 1 :]
 
 def avalia_leitura_memoria(tokens_bloco: list, memoria:dict) -> float:
@@ -128,14 +138,14 @@ def avalia_leitura_memoria(tokens_bloco: list, memoria:dict) -> float:
         Retorna o valor armazenado na memória para o nome especificado.
     """
     nome_memoria = tokens_bloco[0].valor
-    return float(memoria.get(nome_memoria, 0.0))
+    return float64(memoria.get(nome_memoria, 0.0))
 
 def avalia_escrita_memoria(tokens_bloco: list, memoria: dict) -> float:
     """
         Avalia um bloco de escrita de memória (V MEM). Exemplo: (5 MEM)
         Escreve o valor especificado na memória para o nome dado e retorna o valor escrito
     """
-    valor = float(tokens_bloco[0].valor)
+    valor = float64(tokens_bloco[0].valor)
     nome_memoria = tokens_bloco[1].valor
     
     memoria[nome_memoria] = valor
@@ -147,7 +157,7 @@ def avalia_historico_res(tokens_bloco: list, historico: list) -> float:
         Retorna o valor armazenado no histórico para o índice especificado.
     """
 
-    index_historico = float(tokens_bloco[0].valor)
+    index_historico = float64(tokens_bloco[0].valor)
     
     if not index_historico.is_integer() or index_historico < 0:
         raise ValueError(f"Índice de histórico inválido: {index_historico}. Deve ser um número inteiro não negativo.")
@@ -157,19 +167,19 @@ def avalia_historico_res(tokens_bloco: list, historico: list) -> float:
     if index_historico >= len(historico):
         raise ValueError(f"Índice de histórico fora do alcance: {index_historico}. Histórico atual tem {len(historico)} entradas.")
     
-    return float(historico[-(index_historico + 1)])
+    return float64(historico[-(index_historico + 1)])
 
 def avalia_bloco_aritmetico(tokens_bloco: list, memoria: dict, historico: list):
     pilha = []
     
     for token in tokens_bloco:
         if token.tipo == "NUMBER":
-            pilha.append(float(token.valor))
+            pilha.append(float64(token.valor))
             continue
             
         elif token.tipo == "IDENTIFIER_MEM":
             nome_memoria = token.valor
-            pilha.append(float(memoria.get(nome_memoria, 0.0)))
+            pilha.append(float64(memoria.get(nome_memoria, 0.0)))
             continue
         
         if token.tipo in {
@@ -201,31 +211,31 @@ def avalia_bloco_aritmetico(tokens_bloco: list, memoria: dict, historico: list):
 
 def aplica_operador(a:float, b:float, tipo_operador:str) -> float:
     if tipo_operador == "ADDITION_OPERATOR":
-        return a + b
+        return float64(a + b)
     
     if tipo_operador == "SUBTRACTION_OPERATOR":
-        return a - b
+        return float64(a - b)
     
     if tipo_operador == "MULTIPLICATION_OPERATOR":
-        return a * b
+        return float64(a * b)
     
     if tipo_operador == "DIVISION_OPERATOR":
         if b == 0:
             raise ValueError("Divisão por zero.")
-        return a / b
+        return float64(a / b)
     
     if tipo_operador == "INTEGER_DIVISION_OPERATOR":
         if b == 0:
             raise ValueError("Divisão inteira por zero.")
-        return a // b
+        return float64(a // b)
     
     if tipo_operador == "MODULO_OPERATOR":
         if b == 0:
             raise ValueError("Módulo por zero.")
-        return a % b
+        return float64(a % b)
     
     if tipo_operador == "EXPONENTIATION_OPERATOR":
-        return a ** b
+        return float64(a ** b)
     
     raise ValueError(f"Tipo de operador desconhecido: {tipo_operador}")
                 
