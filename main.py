@@ -5,8 +5,6 @@ import dfa
 import executor
 import assembly_generator
 
-#TODO O vetor de tokens gerado pelo Analisador Léxico deve ser salvo em um arquivo .txt para uso nas próximas fases do projeto.
-
 def lerArquivo(nomeArquivo: str, linhas: list[str]) -> None:
     """
         Lê arquivo de entrada e preenche a lista de linhas.
@@ -15,9 +13,36 @@ def lerArquivo(nomeArquivo: str, linhas: list[str]) -> None:
         for linha in arquivo:
             linhas.append(linha.rstrip('\n'))
 
-def results_file(filename, tokens):
-    #processa o nome do arquivo para criar um novo nome para o arquivo de resultados
-    pass
+def salvar_arquivo_assembly(nome_arquivo_entrada: str, codigo_assembly: list[str]) -> None:
+    """
+        Salva o código assembly gerado em um arquivo de saída .s
+    """
+    if nome_arquivo_entrada.endswith('.txt'):
+        nome_arquivo_saida = nome_arquivo_entrada[:-4] + '.s'
+    else:
+        nome_arquivo_saida = 'resultado_assembly' + '.s'
+        
+    with open(nome_arquivo_saida, 'w', encoding='utf-8') as arquivo_saida:
+        for linha in codigo_assembly:
+            arquivo_saida.write(linha + '\n')
+            
+    return nome_arquivo_saida
+
+def salvar_arquivo_token(nome_arquivo_entrada: str, linhas_tokenizadas: list[list[dfa.Token]]) -> str:
+    """
+        Salva os tokens gerados em um arquivo de saída .txt
+    """
+    if nome_arquivo_entrada.endswith('.txt'):
+        nome_arquivo_saida = nome_arquivo_entrada[:-4] + '_tokens.txt'
+    else:
+        nome_arquivo_saida = nome_arquivo_entrada + '_tokens.txt'
+        
+    with open(nome_arquivo_saida, 'w', encoding='utf-8') as arquivo_saida:
+        for indice_linha, tokens_linha in enumerate(linhas_tokenizadas):
+            token_values = [token.valor for token in tokens_linha]
+            arquivo_saida.write(f"{indice_linha + 1}: {token_values}\n")
+            
+    return nome_arquivo_saida
 
 #responsável por reconhecer pedaços VÁLIDOS do código não fazer verificação da operação de expressão
 def parseExpressao(linha:str) -> list[dfa.Token]:
@@ -29,6 +54,11 @@ def parseExpressao(linha:str) -> list[dfa.Token]:
         index = dfa.estado_inicial(linha,index, tokens) 
     
     return tokens
+
+def exibirResultados(resultados: list[float]) -> None:
+    """Mostra os resultados formatados"""
+    for indice, resultado in enumerate(resultados, start=1):
+        print(f"Resultado da linha {indice}: {resultado}")
 
 
 def main():
@@ -45,27 +75,94 @@ def main():
         print(f"Erro ao ler o arquivo: {error}")
         raise SystemExit(1)
     
-    # memoria = {}
-    # historico = []
     linhas_tokenizadas = []
     
+    #lexico
     for numero_linha, linha in enumerate(linhas, start=1):
+        try:
             tokens = parseExpressao(linha)
-            # resultado = executor.executarExpressao(tokens, memoria, historico)
             linhas_tokenizadas.append(tokens)
-    contexto = assembly_generator.montar_mapa_memoria(linhas_tokenizadas)
+        except Exception as error:
+            print(f"Erro lexico na linha {numero_linha}: {error}")
+            raise SystemExit(1)
+        
+    #salva arquivo tokens
+    nome_arquivo_tokens = salvar_arquivo_token(nomeArquivo, linhas_tokenizadas)
+    print(f"Tokens salvos em: {nome_arquivo_tokens}")
     
-    for indice_linha, tokens_linha in enumerate(linhas_tokenizadas):
-        gerar_codigo_assembly = assembly_generator.gerarAssembly(tokens_linha, contexto, indice_linha)
+    #executa exibicao de resultados
+    resultados = []
+    memoria = {}
+    historico = []
+    
+    for numero_linha, tokens in enumerate(linhas_tokenizadas, start=1):
+        try:
+            resultado = executor.executarExpressao(tokens, memoria, historico)
+            resultados.append(resultado)
+        except Exception as error:
+            print(f"Erro na execução da linha {numero_linha}: {error}")
+            raise SystemExit(1)
+        
+    exibirResultados(resultados)
+    
+    #gerar assembly
+    contexto = assembly_generator.montar_mapa_memoria(linhas_tokenizadas)
 
-        print(f"Tokens na linha {indice_linha + 1}: {[token.valor for token in tokens_linha]}")
-        print(f"gerar código assembly da linha {indice_linha + 1}: {gerar_codigo_assembly}")
-            
-            # token_values = [token.valor for token in tokens]
-            # print(f"Tokens na linha {numero_linha}: {token_values}")
-            # print(f"Resultado da linha {numero_linha}: {resultado}")
-            # print(f"Memória após linha {numero_linha}: {memoria}")
-            # print(f"Histórico após linha {numero_linha}: {historico}")
+    codigo_texto = [
+        ".syntax unified",
+        "",
+        ".text",
+        ".global _start",
+        "",
+        "_start:",
+    ]
+
+    # chamada explícita da função pedida pelo professor
+    for indice_linha, tokens_linha in enumerate(linhas_tokenizadas):
+        codigo_texto.append(f"    @ ===== LINHA {indice_linha + 1} =====")
+        codigo_linha = assembly_generator.gerarAssembly( #chamada do assembly_generator para cada linha de tokens
+            tokens_linha,
+            contexto,
+            indice_linha
+        )
+
+        for instrucao in codigo_linha:
+            if instrucao.endswith(":"):
+                codigo_texto.append(instrucao)
+            else:
+                codigo_texto.append(f"    {instrucao}")
+
+        codigo_texto.append("")
+
+    ultimo_res = f"RES_{len(linhas_tokenizadas) - 1}"
+
+    codigo_texto.extend([
+        f"      LDR R0, ={ultimo_res}",
+        "      VLDR.F64 D0, [R0]",
+        "    @ fim do programa",
+        "FIM:",
+        "    B FIM",
+    ])
+
+    # IMPORTANTE:
+    # gerar_secao_dados deve vir depois da geração do código,
+    # porque os TEMP_n só são descobertos durante gerarAssembly(...)
+    codigo_dados = assembly_generator.gerar_secao_dados(contexto)
+    codigo_rotinas = assembly_generator.gerar_rotinas_auxiliares()
+
+    codigo_assembly_final = []
+    codigo_assembly_final.extend(codigo_dados)
+    codigo_assembly_final.extend(codigo_texto)
+    codigo_assembly_final.extend(codigo_rotinas)
+
+    nome_arquivo_assembly = salvar_arquivo_assembly(
+        nomeArquivo,
+        codigo_assembly_final
+    )
+
+    print(f"\nArquivo de tokens gerado: {nome_arquivo_tokens}")
+    print(f"Arquivo Assembly gerado: {nome_arquivo_assembly}")
+
             
             
 if __name__ == "__main__":

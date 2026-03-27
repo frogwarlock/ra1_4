@@ -128,7 +128,7 @@ def  verifica_balanceamento_parenteses(tokens: list[dfa.Token]) -> bool:
             
     return len(pilha_parentesis_aberto) == 0
 
-def encontra_bloco_interno(tokens: list[dfa.Token]) -> tuple[int, int, list[dfa.Token]] | None:
+def encontra_bloco_interno(tokens: list[dfa.Token]) -> tuple[int, int, list[dfa.Token]]:
     """
         Encontra o bloco mais interno de parênteses e retorna os índices de início e fim, além dos tokens contidos nesse bloco.
         Se não houver blocos de parênteses, retorna None.
@@ -366,6 +366,12 @@ def gerar_secao_dados(contexto: dict) -> list[str]:
     
     codigo_dados.append("AUX_ZERO: .double 0.0")
     codigo_dados.append("AUX_ONE: .double 1.0")
+    codigo_dados.append("TMP_Q: .double 0.0")
+    codigo_dados.append("TMP_A: .double 0.0")
+    codigo_dados.append("TMP_B: .double 0.0")
+    codigo_dados.append("TMP_BASE: .double 0.0")
+    codigo_dados.append("TMP_RES: .double 0.0")
+    codigo_dados.append("TMP_EXP_I: .double 0.0")
     
     for valor, label in contexto["constantes"].items():
         codigo_dados.append(f"{label}: .double {valor}")
@@ -426,7 +432,9 @@ def gerar_rotina_integer_div_64() -> list[str]:
         "    VSUB.F64 D3, D3, D4",
         "",
         "INTEGER_DIV_64_DONE:",
-        "    VMOV D0, D3",
+        "    LDR R0, =TMP_Q",
+        "    VSTR.F64 D3, [R0]",
+        "    VLDR.F64 D0, [R0]",
         "    BX LR",
         "",
         "INTEGER_DIV_64_DIV_ZERO:",
@@ -434,7 +442,8 @@ def gerar_rotina_integer_div_64() -> list[str]:
         "    VLDR.F64 D0, [R0]",
         "    BX LR",
     ]
-    
+
+
 def gerar_rotina_modulo_64() -> list[str]:
     return [
         "",
@@ -450,15 +459,27 @@ def gerar_rotina_modulo_64() -> list[str]:
         "    VMRS APSR_nzcv, FPSCR",
         "    BEQ MODULO_64_DIV_ZERO",
         "",
-        "    @ guarda A e B",
-        "    VMOV D6, D0",
-        "    VMOV D7, D1",
+        "    @ guarda A e B em memoria",
+        "    LDR R0, =TMP_A",
+        "    VSTR.F64 D0, [R0]",
+        "    LDR R0, =TMP_B",
+        "    VSTR.F64 D1, [R0]",
         "",
         "    @ q = A // B",
         "    BL INTEGER_DIV_64",
         "",
-        "    @ r = A - q * B",
+        "    @ recarrega B",
+        "    LDR R0, =TMP_B",
+        "    VLDR.F64 D7, [R0]",
+        "",
+        "    @ D2 = q * B",
         "    VMUL.F64 D2, D0, D7",
+        "",
+        "    @ recarrega A",
+        "    LDR R0, =TMP_A",
+        "    VLDR.F64 D6, [R0]",
+        "",
+        "    @ r = A - q * B",
         "    VSUB.F64 D0, D6, D2",
         "",
         "    POP {LR}",
@@ -470,7 +491,8 @@ def gerar_rotina_modulo_64() -> list[str]:
         "    POP {LR}",
         "    BX LR",
     ]
-    
+
+
 def gerar_rotina_exponentiation_64() -> list[str]:
     return [
         "",
@@ -494,15 +516,19 @@ def gerar_rotina_exponentiation_64() -> list[str]:
         "    VMRS APSR_nzcv, FPSCR",
         "    BNE EXPONENTIATION_64_INVALID",
         "",
-        "    @ move contador inteiro para registrador ARM",
-        "    VMOV R4, S8",
+        "    @ move contador inteiro para registrador ARM via memoria",
+        "    LDR R0, =TMP_EXP_I",
+        "    VSTR S8, [R0]",
+        "    LDR R4, [R0]",
         "",
         "    @ resultado = 1.0",
         "    LDR R0, =AUX_ONE",
         "    VLDR.F64 D4, [R0]",
         "",
-        "    @ guarda base",
-        "    VMOV D5, D0",
+        "    @ guarda base via memoria",
+        "    LDR R0, =TMP_BASE",
+        "    VSTR.F64 D0, [R0]",
+        "    VLDR.F64 D5, [R0]",
         "",
         "EXPONENTIATION_64_LOOP_CHECK:",
         "    CMP R4, #0",
@@ -513,7 +539,9 @@ def gerar_rotina_exponentiation_64() -> list[str]:
         "    B EXPONENTIATION_64_LOOP_CHECK",
         "",
         "EXPONENTIATION_64_DONE:",
-        "    VMOV D0, D4",
+        "    LDR R0, =TMP_RES",
+        "    VSTR.F64 D4, [R0]",
+        "    VLDR.F64 D0, [R0]",
         "    BX LR",
         "",
         "EXPONENTIATION_64_INVALID:",
@@ -521,3 +549,5 @@ def gerar_rotina_exponentiation_64() -> list[str]:
         "    VLDR.F64 D0, [R0]",
         "    BX LR",
     ]
+    
+# seven segment 
