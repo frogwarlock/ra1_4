@@ -45,17 +45,21 @@ def main():
         print(f"Erro ao ler o arquivo: {error}")
         raise SystemExit(1)
     
-    memoria = {}
-    historico = []
+    # memoria = {}
+    # historico = []
+    linhas_tokenizadas = []
     
     for numero_linha, linha in enumerate(linhas, start=1):
-        try:
             tokens = parseExpressao(linha)
-            resultado = executor.executarExpressao(tokens, memoria, historico)
-            gerar_codigo_assembly = assembly_generator.gerarAssembly(tokens)
-            
-            print(f"Tokens na linha {numero_linha}: {[token.valor for token in tokens]}")
-            print(f"gerar código assembly da linha {numero_linha}: {gerar_codigo_assembly}")
+            # resultado = executor.executarExpressao(tokens, memoria, historico)
+            linhas_tokenizadas.append(tokens)
+    contexto = assembly_generator.montar_mapa_memoria(linhas_tokenizadas)
+    
+    for indice_linha, tokens_linha in enumerate(linhas_tokenizadas):
+        gerar_codigo_assembly = assembly_generator.gerarAssembly(tokens_linha, contexto, indice_linha)
+
+        print(f"Tokens na linha {indice_linha + 1}: {[token.valor for token in tokens_linha]}")
+        print(f"gerar código assembly da linha {indice_linha + 1}: {gerar_codigo_assembly}")
             
             # token_values = [token.valor for token in tokens]
             # print(f"Tokens na linha {numero_linha}: {token_values}")
@@ -63,10 +67,6 @@ def main():
             # print(f"Memória após linha {numero_linha}: {memoria}")
             # print(f"Histórico após linha {numero_linha}: {historico}")
             
-        except dfa.LexicalError as error:
-            print(f"Erro léxico na linha {numero_linha}: {error}")
-        except ValueError as error:
-            print(f"Erro de valor na linha {numero_linha}: {error}")
             
 if __name__ == "__main__":
     main()
