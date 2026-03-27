@@ -1,4 +1,4 @@
-#Isabella Lucena Conceição
+#Isabella Lucena Conceição - frogwarlock no github
 #ra1_4
 import sys
 import dfa

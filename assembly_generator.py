@@ -361,34 +361,6 @@ def gerar_bloco_operacao_funcao(nome_funcao: str, operando_a: str, operando_b: s
     
     return codigo
 
-def gerar_secao_codigo(linhas_tokenizadas: list[list[dfa.Token]], contexto: dict) -> list[str]:
-    codigo = [
-        "",
-        ".text",
-        ".global _start",
-        "_start:",
-    ]
-    
-    for indice_linha, tokens_linha in enumerate(linhas_tokenizadas):
-        codigo.append(f"@ linha {indice_linha + 1}")
-        codigo_linha = gerarAssembly(tokens_linha, contexto, indice_linha)
-        
-        for instrucao in codigo_linha:
-            if instrucao.endswith(":"):
-                codigo.append(instrucao)
-            else:
-                codigo.append(f"    {instrucao}")
-                
-        codigo.append("")  
-        
-    codigo.extend([
-        " @ código para encerrar o programa",
-        "FIM:",
-        "    B FIM",
-    ])
-    
-    return codigo
-
 def gerar_secao_dados(contexto: dict) -> list[str]:
     codigo_dados = [".data"]
     
