@@ -18,9 +18,9 @@ def salvar_arquivo_assembly(nome_arquivo_entrada: str, codigo_assembly: list[str
         Salva o código assembly gerado em um arquivo de saída .s
     """
     if nome_arquivo_entrada.endswith('.txt'):
-        nome_arquivo_saida = nome_arquivo_entrada[:-4] + '.s'
+        nome_arquivo_saida = 'resultado_assembly.s'
     else:
-        nome_arquivo_saida = 'resultado_assembly' + '.s'
+        nome_arquivo_saida = 'resultado_assembly.s'
         
     with open(nome_arquivo_saida, 'w', encoding='utf-8') as arquivo_saida:
         for linha in codigo_assembly:
@@ -33,9 +33,9 @@ def salvar_arquivo_token(nome_arquivo_entrada: str, linhas_tokenizadas: list[lis
         Salva os tokens gerados em um arquivo de saída .txt
     """
     if nome_arquivo_entrada.endswith('.txt'):
-        nome_arquivo_saida = nome_arquivo_entrada[:-4] + '_tokens.txt'
+        nome_arquivo_saida = 'resultados_tokens.txt'
     else:
-        nome_arquivo_saida = nome_arquivo_entrada + '_tokens.txt'
+        nome_arquivo_saida = 'resultados_tokens.txt'
         
     with open(nome_arquivo_saida, 'w', encoding='utf-8') as arquivo_saida:
         for indice_linha, tokens_linha in enumerate(linhas_tokenizadas):
@@ -139,6 +139,7 @@ def main():
     codigo_texto.extend([
         f"      LDR R0, ={ultimo_res}",
         "      VLDR.F64 D0, [R0]",
+        "      BL DISPLAY_RESULT_7SEG_1DP",
         "    @ fim do programa",
         "FIM:",
         "    B FIM",

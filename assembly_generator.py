@@ -363,28 +363,62 @@ def gerar_bloco_operacao_funcao(nome_funcao: str, operando_a: str, operando_b: s
 
 def gerar_secao_dados(contexto: dict) -> list[str]:
     codigo_dados = [".data"]
-    
+
+    # doubles auxiliares
+    codigo_dados.append(".balign 8")
     codigo_dados.append("AUX_ZERO: .double 0.0")
+
+    codigo_dados.append(".balign 8")
     codigo_dados.append("AUX_ONE: .double 1.0")
+
+    codigo_dados.append(".balign 8")
+    codigo_dados.append("AUX_TEN: .double 10.0")
+
+    codigo_dados.append(".balign 8")
     codigo_dados.append("TMP_Q: .double 0.0")
+
+    codigo_dados.append(".balign 8")
     codigo_dados.append("TMP_A: .double 0.0")
+
+    codigo_dados.append(".balign 8")
     codigo_dados.append("TMP_B: .double 0.0")
+
+    codigo_dados.append(".balign 8")
     codigo_dados.append("TMP_BASE: .double 0.0")
+
+    codigo_dados.append(".balign 8")
     codigo_dados.append("TMP_RES: .double 0.0")
-    codigo_dados.append("TMP_EXP_I: .double 0.0")
-    
+
+    # words auxiliares
+    codigo_dados.append(".balign 4")
+    codigo_dados.append("TMP_EXP_I: .word 0")
+
+    codigo_dados.append(".balign 4")
+    codigo_dados.append("AUX_INTBUF: .word 0")
+
+    # constantes do programa
     for valor, label in contexto["constantes"].items():
+        codigo_dados.append(".balign 8")
         codigo_dados.append(f"{label}: .double {valor}")
-        
+
+    # variáveis de memória
     for _, label in contexto["variaveis"].items():
+        codigo_dados.append(".balign 8")
         codigo_dados.append(f"{label}: .double 0.0")
-        
+
+    # histórico
     for _, label in contexto["historico"].items():
+        codigo_dados.append(".balign 8")
         codigo_dados.append(f"{label}: .double 0.0")
-        
+
+    # temporários
     for indice in range(contexto["contador_temporarios"]):
+        codigo_dados.append(".balign 8")
         codigo_dados.append(f"TEMP_{indice}: .double 0.0")
-        
+
+    # tabela de segmentos por último
+    codigo_dados.append("SEG_TAB: .byte 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F")
+
     return codigo_dados
 
 def gerar_rotinas_auxiliares():
@@ -392,6 +426,9 @@ def gerar_rotinas_auxiliares():
     codigo.extend(gerar_rotina_integer_div_64())
     codigo.extend(gerar_rotina_modulo_64())
     codigo.extend(gerar_rotina_exponentiation_64())
+    codigo.extend(gerar_rotina_get_seg_digit())
+    codigo.extend(gerar_rotina_divmod10_u32())
+    codigo.extend(gerar_rotina_display_result_7seg_1dp())
     return codigo
 
 def gerar_rotina_integer_div_64() -> list[str]:
@@ -551,3 +588,144 @@ def gerar_rotina_exponentiation_64() -> list[str]:
     ]
     
 # seven segment 
+def gerar_rotina_get_seg_digit() -> list[str]:
+    return [
+        "",
+        "@ ===== ROTINA GET_SEG_DIGIT =====",
+        "GET_SEG_DIGIT:",
+        "    @ entrada: R0 = digito (0..9)",
+        "    @ saida:   R0 = padrao do 7 segmentos",
+        "    PUSH {R1, LR}",
+        "    LDR R1, =SEG_TAB",
+        "    LDRB R0, [R1, R0]",
+        "    POP {R1, LR}",
+        "    BX LR",
+    ]
+
+
+def gerar_rotina_divmod10_u32() -> list[str]:
+    return [
+        "",
+        "@ ===== ROTINA DIVMOD10_U32 =====",
+        "DIVMOD10_U32:",
+        "    @ entrada: R0 = valor",
+        "    @ saida:   R0 = quociente, R1 = resto",
+        "    PUSH {R2, LR}",
+        "    MOV R2, #0",
+        "",
+        "DIVMOD10_U32_LOOP:",
+        "    CMP R0, #10",
+        "    BLT DIVMOD10_U32_DONE",
+        "    SUB R0, R0, #10",
+        "    ADD R2, R2, #1",
+        "    B DIVMOD10_U32_LOOP",
+        "",
+        "DIVMOD10_U32_DONE:",
+        "    MOV R1, R0",
+        "    MOV R0, R2",
+        "    POP {R2, LR}",
+        "    BX LR",
+    ]
+
+
+def gerar_rotina_display_result_7seg_1dp() -> list[str]:
+    return [
+        "",
+        "@ ===== ROTINA DISPLAY_RESULT_7SEG_1DP =====",
+        "DISPLAY_RESULT_7SEG_1DP:",
+        "    @ entrada: D0 = valor final",
+        "    PUSH {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, LR}",
+        "",
+        "    @ sinal",
+        "    MOV R9, #0",
+        "    VCMP.F64 D0, #0.0",
+        "    VMRS APSR_nzcv, FPSCR",
+        "    BGE DISPLAY_RESULT_7SEG_POSITIVE",
+        "    MOV R9, #0x40",
+        "    VNEG.F64 D0, D0",
+        "",
+        "DISPLAY_RESULT_7SEG_POSITIVE:",
+        "    @ escala por 10",
+        "    LDR R0, =AUX_TEN",
+        "    VLDR.F64 D1, [R0]",
+        "    VMUL.F64 D0, D0, D1",
+        "",
+        "    @ converte para inteiro",
+        "    VCVT.U32.F64 S0, D0",
+        "    LDR R0, =AUX_INTBUF",
+        "    VSTR S0, [R0]",
+        "    LDR R4, [R0]",
+        "",
+        "    @ separa parte inteira e decimal",
+        "    MOV R0, R4",
+        "    BL DIVMOD10_U32",
+        "    MOV R5, R0      @ parte inteira",
+        "    MOV R6, R1      @ decimal",
+        "",
+        "    @ separa unidades, dezenas e centenas",
+        "    MOV R0, R5",
+        "    BL DIVMOD10_U32",
+        "    MOV R5, R1      @ unidades",
+        "    MOV R7, R0      @ dezenas+centenas",
+        "",
+        "    MOV R0, R7",
+        "    BL DIVMOD10_U32",
+        "    MOV R8, R1      @ dezenas",
+        "    MOV R7, R0      @ centenas",
+        "",
+        "    @ converte decimal",
+        "    MOV R0, R6",
+        "    BL GET_SEG_DIGIT",
+        "    MOV R6, R0",
+        "",
+        "    @ converte unidades (sempre mostra)",
+        "    MOV R0, R5",
+        "    BL GET_SEG_DIGIT",
+        "    MOV R5, R0",
+        "",
+        "    @ converte dezenas:",
+        "    @ mostra se centenas != 0 OU dezenas != 0",
+        "    CMP R7, #0",
+        "    BNE DISPLAY_RESULT_7SEG_SHOW_TENS",
+        "    CMP R8, #0",
+        "    BNE DISPLAY_RESULT_7SEG_SHOW_TENS",
+        "    MOV R8, #0",
+        "    B DISPLAY_RESULT_7SEG_TENS_DONE",
+        "",
+        "DISPLAY_RESULT_7SEG_SHOW_TENS:",
+        "    MOV R0, R8",
+        "    BL GET_SEG_DIGIT",
+        "    MOV R8, R0",
+        "",
+        "DISPLAY_RESULT_7SEG_TENS_DONE:",
+        "    @ converte centenas ou deixa branco",
+        "    CMP R7, #0",
+        "    BEQ DISPLAY_RESULT_7SEG_HUNDREDS_BLANK",
+        "    MOV R0, R7",
+        "    BL GET_SEG_DIGIT",
+        "    MOV R7, R0",
+        "    B DISPLAY_RESULT_7SEG_HUNDREDS_DONE",
+        "",
+        "DISPLAY_RESULT_7SEG_HUNDREDS_BLANK:",
+        "    MOV R7, #0",
+        "",
+        "DISPLAY_RESULT_7SEG_HUNDREDS_DONE:",
+        "    @ monta HEX3..HEX0 = dezenas, unidades, _, decimal",
+        "    MOV R0, R6",
+        "    ORR R0, R0, #0x00000800",
+        "    ORR R0, R0, R5, LSL #16",
+        "    ORR R0, R0, R8, LSL #24",
+        "",
+        "    LDR R1, =0xFF200020",
+        "    STR R0, [R1]",
+        "",
+        "    @ monta HEX5..HEX4 = sinal, centenas",
+        "    MOV R0, R7",
+        "    ORR R0, R0, R9, LSL #8",
+        "",
+        "    LDR R1, =0xFF200030",
+        "    STR R0, [R1]",
+        "",
+        "    POP {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, LR}",
+        "    BX LR",
+    ]
