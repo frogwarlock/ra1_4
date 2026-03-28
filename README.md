@@ -21,41 +21,6 @@ Arquivo de tokens gerado: resultados_tokens.txt
 Arquivo Assembly gerado: resultado_assembly.s
 ```
 
-## Testes Unitários
-
-- Reconhecimento de números (inteiros, decimais, negativos)
-- Validação de operadores (+, -, *, /, //, %, ^)
-- Reconhecimento de parênteses
-- Palavras especiais (RES, MEM)
-- Expressões completas em notação RPN
-- Detecção de erros léxicos
-- Validação de delimitadores
-
-### Executar todos os testes
-
-```bash
-python3 -m unittest test_dfa -v
-```
-
-### Executar testes de uma categoria específica
-
-```bash
-# Apenas testes de números
-python3 -m unittest test_dfa.TestDFANumeros -v
-
-# Apenas testes de operadores
-python3 -m unittest test_dfa.TestDFAOperadores -v
-
-# Apenas testes de erros léxicos
-python3 -m unittest test_dfa.TestDFAErrosLexicos -v
-```
-
-### Executar um teste específico
-
-```bash
-python3 -m unittest test_dfa.TestDFANumeros.test_numero_decimal -v
-```
-
 ## Estrutura do projeto
 
 ```text
@@ -114,7 +79,7 @@ flowchart TD
     M --> N
 ```
 
-## Decisões estratégicas adotadas
+## Decisões adotadas durante o projeto
 
 ### 1) Separação entre validação local e cálculo final
 
@@ -141,13 +106,25 @@ Isso mantém o comportamento previsível e compatível com o escopo por arquivo.
 
 Operações não triviais no ARMv7 (como divisão inteira, módulo e potenciação) foram organizadas em rotinas auxiliares para manter o código gerado legível e reutilizável.
 
-## 6) Representação de números no display utilizando '_'
+### 6) Representação de números no display utilizando '_'
 
 Escolhi por representar no display de 7 segmentos a parte inteira da fracionária com um underline (_) devido ao meu desconhecimento de como acionar o ponto.
 
-## 7) Segregação dos grandes blocos em pequenas funções
+### 7) Segregação dos grandes blocos em pequenas funções
 
 Tentei separar os blocos principais de código em pequenas funções que me permitem realizar ajustes em pontos específicos da implementação caso haja necessidade.
+
+### 8) `N RES` começa a partir de 0
+
+Isso significa que 0 é o índice mais recente anterior a chamada atual.
+Exemplo:
+
+```text
+(12.0 X)
+(0 RES)
+```
+
+O resultado esperado seria `12`
 
 ## Execução com e sem exibição de resultados
 
@@ -166,6 +143,41 @@ python3 main.py arquivo1.txt --teste
 ```
 
 Além de gerar os arquivos, exibe os resultados linha a linha no terminal, útil para validação durante desenvolvimento.
+
+## Testes Unitários
+
+- Reconhecimento de números (inteiros, decimais, negativos)
+- Validação de operadores (+, -, *, /, //, %, ^)
+- Reconhecimento de parênteses
+- Palavras especiais (RES, MEM)
+- Expressões completas em notação RPN
+- Detecção de erros léxicos
+- Validação de delimitadores
+
+### Executar todos os testes
+
+```bash
+python3 -m unittest test_dfa -v
+```
+
+### Executar testes de uma categoria específica
+
+```bash
+# Apenas testes de números
+python3 -m unittest test_dfa.TestDFANumeros -v
+
+# Apenas testes de operadores
+python3 -m unittest test_dfa.TestDFAOperadores -v
+
+# Apenas testes de erros léxicos
+python3 -m unittest test_dfa.TestDFAErrosLexicos -v
+```
+
+### Executar um teste específico
+
+```bash
+python3 -m unittest test_dfa.TestDFANumeros.test_numero_decimal -v
+```
 
 ## Observações de conformidade com o enunciado
 

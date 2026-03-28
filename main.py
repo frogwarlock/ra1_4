@@ -33,9 +33,9 @@ def salvar_arquivo_token(nome_arquivo_entrada: str, linhas_tokenizadas: list[lis
         Salva os tokens gerados em um arquivo de saída .txt
     """
     if nome_arquivo_entrada.endswith('.txt'):
-        nome_arquivo_saida = 'resultados_tokens.txt'
+        nome_arquivo_saida = 'resultado_tokens.txt'
     else:
-        nome_arquivo_saida = 'resultados_tokens.txt'
+        nome_arquivo_saida = 'resultado_tokens.txt'
         
     with open(nome_arquivo_saida, 'w', encoding='utf-8') as arquivo_saida:
         for indice_linha, tokens_linha in enumerate(linhas_tokenizadas):
