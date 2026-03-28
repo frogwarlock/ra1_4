@@ -1,4 +1,4 @@
-#maquina de estados finitos 
+#maquina de estados finitos ISABELLA LUCENA BCC 2026
 # Implementação do Analisador léxico usando Autômatos Finitos Determinísticos (AFDs), com cada estado como uma função.
 from dataclasses import dataclass
 

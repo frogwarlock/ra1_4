@@ -1,4 +1,4 @@
-#Aluno 3 
+#Aluno 3 - ISABELLA LUCENA BCC 2026
 #gerar_assembly e funções auxiliares
 #lerArquivo está em lexer_to_assembly
 

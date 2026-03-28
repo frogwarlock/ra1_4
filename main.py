@@ -57,13 +57,18 @@ def parseExpressao(linha:str) -> list[dfa.Token]:
 
 def exibirResultados(resultados: list[float]) -> None:
     """Mostra os resultados formatados"""
+    print("\n")
     for indice, resultado in enumerate(resultados, start=1):
         print(f"Resultado da linha {indice}: {resultado}")
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python main.py <filename>.txt")
+    if len(sys.argv) not in (2, 3):
+        print("Usage: python main.py <filename>.txt [--teste]")
+        raise SystemExit(1)
+
+    if len(sys.argv) == 3 and sys.argv[2] != "--teste":
+        print("Flag inválida. Use apenas --teste")
         raise SystemExit(1)
     
     nomeArquivo = sys.argv[1]
@@ -103,7 +108,9 @@ def main():
             print(f"Erro na execução da linha {numero_linha}: {error}")
             raise SystemExit(1)
         
-    exibirResultados(resultados)
+    #so aparece se tiver subido a flag --teste   
+    if len(sys.argv) == 3 and sys.argv[2] == "--teste":
+        exibirResultados(resultados)
     
     #gerar assembly
     contexto = assembly_generator.montar_mapa_memoria(linhas_tokenizadas)

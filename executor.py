@@ -1,4 +1,4 @@
-# funções referentes ao aluno 2
+# funções referentes ao aluno 2 - ISABELLA LUCENA BCC 2026
 import struct
 from dfa import Token
 

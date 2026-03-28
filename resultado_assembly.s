@@ -20,35 +20,33 @@ TMP_EXP_I: .word 0
 .balign 4
 AUX_INTBUF: .word 0
 .balign 8
-CONST_0: .double 12.5
+CONST_0: .double 2.60
 .balign 8
-CONST_1: .double 2
+CONST_1: .double 1.4
 .balign 8
-CONST_2: .double 3
+CONST_2: .double 10.0
 .balign 8
-CONST_3: .double 15
+CONST_3: .double 3
 .balign 8
-CONST_4: .double 4
+CONST_4: .double 2
 .balign 8
-CONST_5: .double 9
+CONST_5: .double 4
 .balign 8
-CONST_6: .double 2.0
+CONST_6: .double 8
 .balign 8
-CONST_7: .double 7
+CONST_7: .double 2.0
 .balign 8
-CONST_8: .double 5.0
+CONST_8: .double 9
 .balign 8
-CONST_9: .double 3.0
+CONST_9: .double 1
 .balign 8
-CONST_10: .double 0
+CONST_10: .double 5
 .balign 8
-CONST_11: .double 1
+CONST_11: .double 0
 .balign 8
-CONST_12: .double 8.0
+CONST_12: .double 12.0
 .balign 8
-CONST_13: .double 25.5
-.balign 8
-MEM_Z: .double 0.0
+MEM_X: .double 0.0
 .balign 8
 RES_0: .double 0.0
 .balign 8
@@ -69,8 +67,6 @@ RES_7: .double 0.0
 RES_8: .double 0.0
 .balign 8
 RES_9: .double 0.0
-.balign 8
-RES_10: .double 0.0
 .balign 8
 TEMP_0: .double 0.0
 .balign 8
@@ -105,20 +101,6 @@ TEMP_14: .double 0.0
 TEMP_15: .double 0.0
 .balign 8
 TEMP_16: .double 0.0
-.balign 8
-TEMP_17: .double 0.0
-.balign 8
-TEMP_18: .double 0.0
-.balign 8
-TEMP_19: .double 0.0
-.balign 8
-TEMP_20: .double 0.0
-.balign 8
-TEMP_21: .double 0.0
-.balign 8
-TEMP_22: .double 0.0
-.balign 8
-TEMP_23: .double 0.0
 SEG_TAB: .byte 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F
 .syntax unified
 
@@ -127,11 +109,12 @@ SEG_TAB: .byte 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F
 
 _start:
     @ ===== LINHA 1 =====
-    @ escrita memoria MEM_Z
+    @ operacao VADD.F64
     LDR R0, =CONST_0
     VLDR.F64 D0, [R0]
-    LDR R1, =MEM_Z
-    VSTR.F64 D0, [R1]
+    LDR R1, =CONST_1
+    VLDR.F64 D1, [R1]
+    VADD.F64 D0, D0, D1
     LDR R2, =TEMP_0
     VSTR.F64 D0, [R2]
     LDR R0, =TEMP_0
@@ -140,229 +123,181 @@ _start:
     VSTR.F64 D0, [R1]
 
     @ ===== LINHA 2 =====
-    @ leitura memoria MEM_Z
-    LDR R0, =MEM_Z
+    @ escrita memoria MEM_X
+    LDR R0, =CONST_2
     VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_1
+    LDR R1, =MEM_X
     VSTR.F64 D0, [R1]
+    LDR R2, =TEMP_1
+    VSTR.F64 D0, [R2]
     LDR R0, =TEMP_1
     VLDR.F64 D0, [R0]
     LDR R1, =RES_1
     VSTR.F64 D0, [R1]
 
     @ ===== LINHA 3 =====
-    @ operacao VDIV.F64
-    LDR R0, =MEM_Z
+    @ leitura memoria MEM_X
+    LDR R0, =MEM_X
     VLDR.F64 D0, [R0]
-    LDR R1, =CONST_1
-    VLDR.F64 D1, [R1]
-    VDIV.F64 D0, D0, D1
-    LDR R2, =TEMP_2
-    VSTR.F64 D0, [R2]
-    @ operacao VADD.F64
+    LDR R1, =TEMP_2
+    VSTR.F64 D0, [R1]
     LDR R0, =TEMP_2
-    VLDR.F64 D0, [R0]
-    LDR R1, =CONST_2
-    VLDR.F64 D1, [R1]
-    VADD.F64 D0, D0, D1
-    LDR R2, =TEMP_3
-    VSTR.F64 D0, [R2]
-    LDR R0, =TEMP_3
     VLDR.F64 D0, [R0]
     LDR R1, =RES_2
     VSTR.F64 D0, [R1]
 
     @ ===== LINHA 4 =====
-    @ operacao MODULO_64 chama funcao
+    @ operacao VADD.F64
     LDR R0, =CONST_3
     VLDR.F64 D0, [R0]
     LDR R1, =CONST_4
     VLDR.F64 D1, [R1]
-    BL MODULO_64
-    LDR R2, =TEMP_4
+    VADD.F64 D0, D0, D1
+    LDR R2, =TEMP_3
     VSTR.F64 D0, [R2]
     @ operacao VMUL.F64
-    LDR R0, =TEMP_4
+    LDR R0, =TEMP_3
     VLDR.F64 D0, [R0]
-    LDR R1, =CONST_1
+    LDR R1, =CONST_5
     VLDR.F64 D1, [R1]
     VMUL.F64 D0, D0, D1
-    LDR R2, =TEMP_5
+    LDR R2, =TEMP_4
     VSTR.F64 D0, [R2]
-    LDR R0, =TEMP_5
+    LDR R0, =TEMP_4
     VLDR.F64 D0, [R0]
     LDR R1, =RES_3
     VSTR.F64 D0, [R1]
 
     @ ===== LINHA 5 =====
-    @ operacao INTEGER_DIV_64 chama funcao
-    LDR R0, =CONST_5
+    @ operacao VSUB.F64
+    LDR R0, =CONST_2
     VLDR.F64 D0, [R0]
-    LDR R1, =CONST_2
+    LDR R1, =CONST_3
     VLDR.F64 D1, [R1]
-    BL INTEGER_DIV_64
+    VSUB.F64 D0, D0, D1
+    LDR R2, =TEMP_5
+    VSTR.F64 D0, [R2]
+    @ operacao VDIV.F64
+    LDR R0, =TEMP_5
+    VLDR.F64 D0, [R0]
+    LDR R1, =CONST_4
+    VLDR.F64 D1, [R1]
+    VDIV.F64 D0, D0, D1
     LDR R2, =TEMP_6
     VSTR.F64 D0, [R2]
-    @ operacao EXPONENTIATION_64 chama funcao
+    LDR R0, =TEMP_6
+    VLDR.F64 D0, [R0]
+    LDR R1, =RES_4
+    VSTR.F64 D0, [R1]
+
+    @ ===== LINHA 6 =====
+    @ operacao INTEGER_DIV_64 chama funcao
     LDR R0, =CONST_6
     VLDR.F64 D0, [R0]
-    LDR R1, =CONST_1
+    LDR R1, =CONST_3
     VLDR.F64 D1, [R1]
-    BL EXPONENTIATION_64
+    BL INTEGER_DIV_64
     LDR R2, =TEMP_7
     VSTR.F64 D0, [R2]
     @ operacao VADD.F64
-    LDR R0, =TEMP_6
+    LDR R0, =TEMP_7
     VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_7
+    LDR R1, =CONST_7
     VLDR.F64 D1, [R1]
     VADD.F64 D0, D0, D1
     LDR R2, =TEMP_8
     VSTR.F64 D0, [R2]
     LDR R0, =TEMP_8
     VLDR.F64 D0, [R0]
-    LDR R1, =RES_4
-    VSTR.F64 D0, [R1]
-
-    @ ===== LINHA 6 =====
-    @ operacao VSUB.F64
-    LDR R0, =CONST_7
-    VLDR.F64 D0, [R0]
-    LDR R1, =CONST_8
-    VLDR.F64 D1, [R1]
-    VSUB.F64 D0, D0, D1
-    LDR R2, =TEMP_9
-    VSTR.F64 D0, [R2]
-    @ operacao VADD.F64
-    LDR R0, =CONST_9
-    VLDR.F64 D0, [R0]
-    LDR R1, =CONST_1
-    VLDR.F64 D1, [R1]
-    VADD.F64 D0, D0, D1
-    LDR R2, =TEMP_10
-    VSTR.F64 D0, [R2]
-    @ operacao VMUL.F64
-    LDR R0, =TEMP_9
-    VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_10
-    VLDR.F64 D1, [R1]
-    VMUL.F64 D0, D0, D1
-    LDR R2, =TEMP_11
-    VSTR.F64 D0, [R2]
-    LDR R0, =TEMP_11
-    VLDR.F64 D0, [R0]
     LDR R1, =RES_5
     VSTR.F64 D0, [R1]
 
     @ ===== LINHA 7 =====
-    @ RES leitura de histórico linha RES_5
-    LDR R0, =RES_5
+    @ operacao MODULO_64 chama funcao
+    LDR R0, =CONST_8
     VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_12
-    VSTR.F64 D0, [R1]
-    LDR R0, =TEMP_12
+    LDR R1, =CONST_5
+    VLDR.F64 D1, [R1]
+    BL MODULO_64
+    LDR R2, =TEMP_9
+    VSTR.F64 D0, [R2]
+    @ operacao VADD.F64
+    LDR R0, =TEMP_9
+    VLDR.F64 D0, [R0]
+    LDR R1, =CONST_9
+    VLDR.F64 D1, [R1]
+    VADD.F64 D0, D0, D1
+    LDR R2, =TEMP_10
+    VSTR.F64 D0, [R2]
+    LDR R0, =TEMP_10
     VLDR.F64 D0, [R0]
     LDR R1, =RES_6
     VSTR.F64 D0, [R1]
 
     @ ===== LINHA 8 =====
-    @ RES leitura de histórico linha RES_6
-    LDR R0, =RES_6
+    @ operacao EXPONENTIATION_64 chama funcao
+    LDR R0, =CONST_7
     VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_13
-    VSTR.F64 D0, [R1]
-    @ RES leitura de histórico linha RES_5
-    LDR R0, =RES_5
-    VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_14
-    VSTR.F64 D0, [R1]
-    @ operacao VADD.F64
-    LDR R0, =TEMP_13
-    VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_14
+    LDR R1, =CONST_3
     VLDR.F64 D1, [R1]
-    VADD.F64 D0, D0, D1
-    LDR R2, =TEMP_15
+    BL EXPONENTIATION_64
+    LDR R2, =TEMP_11
     VSTR.F64 D0, [R2]
-    LDR R0, =TEMP_15
+    @ operacao VSUB.F64
+    LDR R0, =TEMP_11
+    VLDR.F64 D0, [R0]
+    LDR R1, =CONST_9
+    VLDR.F64 D1, [R1]
+    VSUB.F64 D0, D0, D1
+    LDR R2, =TEMP_12
+    VSTR.F64 D0, [R2]
+    LDR R0, =TEMP_12
     VLDR.F64 D0, [R0]
     LDR R1, =RES_7
     VSTR.F64 D0, [R1]
 
     @ ===== LINHA 9 =====
-    @ operacao EXPONENTIATION_64 chama funcao
-    LDR R0, =CONST_1
-    VLDR.F64 D0, [R0]
-    LDR R1, =CONST_2
-    VLDR.F64 D1, [R1]
-    BL EXPONENTIATION_64
-    LDR R2, =TEMP_16
-    VSTR.F64 D0, [R2]
-    @ operacao VDIV.F64
-    LDR R0, =CONST_12
-    VLDR.F64 D0, [R0]
-    LDR R1, =CONST_1
-    VLDR.F64 D1, [R1]
-    VDIV.F64 D0, D0, D1
-    LDR R2, =TEMP_17
-    VSTR.F64 D0, [R2]
     @ operacao VADD.F64
-    LDR R0, =TEMP_16
+    LDR R0, =MEM_X
     VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_17
+    LDR R1, =CONST_10
     VLDR.F64 D1, [R1]
     VADD.F64 D0, D0, D1
-    LDR R2, =TEMP_18
+    LDR R2, =TEMP_13
     VSTR.F64 D0, [R2]
-    LDR R0, =TEMP_18
+    @ operacao VMUL.F64
+    LDR R0, =TEMP_13
+    VLDR.F64 D0, [R0]
+    LDR R1, =CONST_4
+    VLDR.F64 D1, [R1]
+    VMUL.F64 D0, D0, D1
+    LDR R2, =TEMP_14
+    VSTR.F64 D0, [R2]
+    LDR R0, =TEMP_14
     VLDR.F64 D0, [R0]
     LDR R1, =RES_8
     VSTR.F64 D0, [R1]
 
     @ ===== LINHA 10 =====
-    @ leitura memoria MEM_Z
-    LDR R0, =MEM_Z
-    VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_19
-    VSTR.F64 D0, [R1]
     @ RES leitura de histórico linha RES_8
     LDR R0, =RES_8
     VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_20
+    LDR R1, =TEMP_15
     VSTR.F64 D0, [R1]
     @ operacao VADD.F64
-    LDR R0, =TEMP_19
+    LDR R0, =TEMP_15
     VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_20
+    LDR R1, =CONST_12
     VLDR.F64 D1, [R1]
     VADD.F64 D0, D0, D1
-    LDR R2, =TEMP_21
+    LDR R2, =TEMP_16
     VSTR.F64 D0, [R2]
-    LDR R0, =TEMP_21
+    LDR R0, =TEMP_16
     VLDR.F64 D0, [R0]
     LDR R1, =RES_9
     VSTR.F64 D0, [R1]
 
-    @ ===== LINHA 11 =====
-    @ RES leitura de histórico linha RES_9
-    LDR R0, =RES_9
-    VLDR.F64 D0, [R0]
-    LDR R1, =TEMP_22
-    VSTR.F64 D0, [R1]
-    @ operacao VSUB.F64
-    LDR R0, =TEMP_22
-    VLDR.F64 D0, [R0]
-    LDR R1, =CONST_13
-    VLDR.F64 D1, [R1]
-    VSUB.F64 D0, D0, D1
-    LDR R2, =TEMP_23
-    VSTR.F64 D0, [R2]
-    LDR R0, =TEMP_23
-    VLDR.F64 D0, [R0]
-    LDR R1, =RES_10
-    VSTR.F64 D0, [R1]
-
-      LDR R0, =RES_10
+      LDR R0, =RES_9
       VLDR.F64 D0, [R0]
       BL DISPLAY_RESULT_7SEG_1DP
     @ fim do programa
